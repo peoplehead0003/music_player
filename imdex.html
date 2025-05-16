@@ -1,1 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>整合式音樂播放器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        /* CSS 樣式 */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
 
+        .player-container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            width: 350px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .cover-art {
+            width: 200px;
+            height: 200px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 0 auto 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .cover-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #song-title {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        #artist-name {
+            font-size: 1em;
+            color: #777;
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            background-color: #eee;
+            height: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .progress-bar {
+            background-color: #4CAF50;
+            height: 100%;
+            width: 0%;
+            border-radius: 5px;
+        }
+
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .control-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5em;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background-color: #45a049;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #volume-slider {
+            width: 150px;
+        }
+
+        .playlist-container {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .playlist-container h3 {
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        #playlist {
+            list-style: none;
+            padding: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        #playlist li {
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+            cursor: pointer;
+            color: #555;
+            transition: background-color 0.2s ease;
+        }
+
+        #playlist li:last-child {
+            border-bottom: none;
+        }
+
+        #playlist li:hover {
+            background-color: #f9f9f9;
+        }
+
+        #playlist li.active-song {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <h1>我的音樂播放器</h1>
+        <div class="cover-art">
+            <img id="cover" src="images/default_cover.jpg" alt="專輯封面">
+        </div>
+        <h2 id="song-title">歌曲名稱</h2>
+        <h3 id="artist-name">藝人名稱</h3>
+
+        <audio id="audio" src="music/sample_music.mp3"></audio>
+
+        <div class="progress-container">
+            <div id="progress" class="progress-bar"></div>
+        </div>
+        <div class="time-info">
+            <span id="current-time">0:00</span> / <span id="duration">0:00</span>
+        </div>
+
+        <div class="controls">
+            <button id="prev" class="control-btn"><i class="fas fa-backward"></i></button>
+            <button id="play" class="control-btn"><i class="fas fa-play"></i></button>
+            <button id="next" class="control-btn"><i class="fas fa-forward"></i></button>
+        </div>
+
+        <div class="volume-control">
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+            <i class="fas fa-volume-up"></i>
+        </div>
+
+        <div class="playlist-container">
+            <h3>播放列表</h3>
+            <ul id="playlist">
+                </ul>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript 程式碼
+        const audio = document.getElementById('audio');
+        const playBtn = document.getElementById('play');
+        const prevBtn = document.getElementById('prev');
+        const nextBtn = document.getElementById('next');
+        const songTitle = document.getElementById('song-title');
+        const artistName = document.getElementById('artist-name');
+        const coverArt = document.getElementById('cover');
+        const progressContainer = document.querySelector('.progress-container');
+        const progressBar = document.getElementById('progress');
+        const currentTimeSpan = document.getElementById('current-time');
+        const durationSpan = document.getElementById('duration');
+        const volumeSlider = document.getElementById('volume-slider');
+        const playlistUl = document.getElementById('playlist');
+
+        let isPlaying = false;
+        let songIndex = 0;
+
+        const songs = [
+            {
+                title: '美好的一天',
+                artist: '快樂樂團',
+                src: 'music/sample_music.mp3', // 請確保這個路徑是正確的
+                cover: 'images/cover1.jpg' // 請確保這個路徑是正確的
+            },
+            {
+                title: '城市夜晚',
+                artist: '夢想家',
+                src: 'music/sample_music2.mp3', // 請確保這個路徑是正確的
+                cover: 'images/cover2.jpg' // 請確保這個路徑是正確的
+            },
+            {
+                title: '和平之歌',
+                artist: '自由之聲',
+                src: 'music/sample_music3.mp3', // 請確保這個路徑是正確的
+                cover: 'images/cover3.jpg' // 請確保這個路徑是正確的
+            }
+        ];
+
+        // 載入歌曲資訊
+        function loadSong(song) {
+            songTitle.textContent = song.title;
+            artistName.textContent = song.artist;
+            audio.src = song.src;
+            coverArt.src = song.cover;
+            updatePlaylistActiveSong();
+        }
+
+        // 播放/暫停
+        function playSong() {
+            isPlaying = true;
+            audio.play();
+            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        }
+
+        function pauseSong() {
+            isPlaying = false;
+            audio.pause();
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+        }
+
+        // 切換播放/暫停
+        playBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                pauseSong();
+            } else {
+                playSong();
+            }
+        });
+
+        // 上一首
+        prevBtn.addEventListener('click', () => {
+            songIndex--;
+            if (songIndex < 0) {
+                songIndex = songs.length - 1;
+            }
+            loadSong(songs[songIndex]);
+            playSong();
+        });
+
+        // 下一首
+        nextBtn.addEventListener('click', () => {
+            songIndex++;
+            if (songIndex > songs.length - 1) {
+                songIndex = 0;
+            }
+            loadSong(songs[songIndex]);
+            playSong();
+        });
+
+        // 更新進度條
+        audio.addEventListener('timeupdate', (e) => {
+            const { duration, currentTime } = e.target;
+            const progressPercent = (currentTime / duration) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            // 更新時間顯示
+            const formatTime = (time) => {
+                const minutes = Math.floor(time / 60);
+                const seconds = Math.floor(time % 60);
+                return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            };
+
+            currentTimeSpan.textContent = formatTime(currentTime);
+            if (duration) {
+                durationSpan.textContent = formatTime(duration);
+            }
+        });
+
+        // 點擊進度條跳轉
+        progressContainer.addEventListener('click', (e) => {
+            const width = progressContainer.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audio.duration;
+            audio.currentTime = (clickX / width) * duration;
+        });
+
+        // 歌曲結束自動播放下一首
+        audio.addEventListener('ended', () => {
+            nextBtn.click();
+        });
+
+        // 音量控制
+        volumeSlider.addEventListener('input', (e) => {
+            audio.volume = e.target.value;
+        });
+
+        // 載入播放列表
+        function loadPlaylist() {
+            songs.forEach((song, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${song.title} - ${song.artist}`;
+                li.setAttribute('data-index', index);
+                li.addEventListener('click', () => {
+                    songIndex = index;
+                    loadSong(songs[songIndex]);
+                    playSong();
+                });
+                playlistUl.appendChild(li);
+            });
+        }
+
+        // 更新播放列表中當前歌曲的樣式
+        function updatePlaylistActiveSong() {
+            const playlistItems = document.querySelectorAll('#playlist li');
+            playlistItems.forEach((item, index) => {
+                if (index === songIndex) {
+                    item.classList.add('active-song');
+                } else {
+                    item.classList.remove('active-song');
+                }
+            });
+        }
+
+        // 初始化
+        loadSong(songs[songIndex]);
+        loadPlaylist();
+    </script>
+</body>
+</html>
