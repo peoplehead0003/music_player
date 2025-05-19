@@ -432,6 +432,17 @@
                 let randomIndex = Math.floor(Math.random() * userPlaylist.length);
                 playPlaylistSong(randomIndex);
             }
+            if (isShuffle) {
+                // 隨機播放啟用時，圖示變更顏色或樣式
+                shuffleBtn.style.color = '#f39c12';  // 使用黃色顯示隨機模式啟用
+                shuffleBtn.querySelector('i').classList.remove('fa-random'); // 移除原來的隨機圖示
+                shuffleBtn.querySelector('i').classList.add('fa-random', 'active'); // 添加新的圖示樣式
+            } else {
+                // 隨機播放禁用時，恢復原來的圖示顏色和樣式
+                shuffleBtn.style.color = '';  // 恢復原樣顏色
+                shuffleBtn.querySelector('i').classList.remove('active'); // 移除 'active' 類
+                shuffleBtn.querySelector('i').classList.add('fa-random'); // 恢復原來的圖示
+            }
         });
 
     </script>
