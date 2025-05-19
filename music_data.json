@@ -1,16 +1,4 @@
 [
-    {
-        "title": "南北二路",
-        "artist": "玖壹壹(Nine one one)",
-        "album": "南北二路",
-        "src": "song/玖壹壹(Nine one one) - 南北二路 LAN PA LI ROAD 官方MV首播.mp3",
-        "cover": "cover/南北二路.jpg"
-    },
-    {
-        "title": "歌曲名稱2",
-        "artist": "藝人2",
-        "album": "專輯名稱",
-        "src": "music/song2.mp3",
-        "cover": "images/cover2.jpg"
-    }
+    {"title": "一生只督妳一人","artist": "玖壹壹(Nine one one)","album": "x","src": "song/一生只督妳一人.mp3","cover": "cover/一生只督妳一人.jpg"},
+    {"title": "心內的話","artist": "玖壹壹(Nine one one)","album": "x","src": "song/心內的話.mp3","cover": "cover/心內的話.jpg"}
 ]
