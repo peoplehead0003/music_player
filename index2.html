@@ -133,6 +133,7 @@
         let currentIndex = 0;
         let isShuffle = false;
         let filterType = 'all';
+        let currentArtist = '';
 
         fetch('music_data.json')
             .then(response => response.json())
@@ -145,24 +146,37 @@
         filterBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 filterType = btn.getAttribute('data-filter');
-                loadMusicLibrary();
+                if (filterType === 'artist') {
+                    showArtists();
+                } else {
+                    loadMusicLibrary();
+                }
             });
         });
 
-        function loadMusicLibrary() {
+        function showArtists() {
             musicList.innerHTML = '';
 
-            let filteredSongs = songs;
+            const uniqueArtists = [...new Set(songs.map(song => song.artist))];
 
-            if (filterType === 'artist') {
-                filteredSongs = songs.filter((song, index, self) =>
-                    index === self.findIndex(s => s.artist === song.artist));
-            } else if (filterType === 'album') {
-                filteredSongs = songs.filter((song, index, self) =>
-                    index === self.findIndex(s => s.album === song.album));
-            }
+            uniqueArtists.forEach(artist => {
+                const li = document.createElement('li');
+                li.textContent = artist;
+                li.classList.add('artist-name');
+                
+                li.addEventListener('click', () => {
+                    currentArtist = artist;
+                    showSongsByArtist();
+                });
 
-            filteredSongs.forEach((song, index) => {
+                musicList.appendChild(li);
+            });
+        }
+
+        function showSongsByArtist() {
+            musicList.innerHTML = '';
+
+            songs.filter(song => song.artist === currentArtist).forEach(song => {
                 const li = document.createElement('li');
 
                 li.innerHTML = `
@@ -179,38 +193,7 @@
                     playSong();
                 });
 
-                li.querySelector('.add-btn').addEventListener('click', () => {
-                    if (!userPlaylist.some(item => item.title === song.title)) {
-                        userPlaylist.push(song);
-                        updatePlaylist();
-                    }
-                });
-
                 musicList.appendChild(li);
-            });
-        }
-
-        function playSong() {
-            const song = songs[currentIndex];
-            audioPlayer.src = song.src;
-            audioPlayer.play();
-        }
-
-        function updatePlaylist() {
-            playlist.innerHTML = '';
-            userPlaylist.forEach((song, index) => {
-                const li = document.createElement('li');
-
-                li.innerHTML = `
-                    <img src="${song.cover}" class="cover-art">
-                    <div class="song-info">
-                        <strong>${song.title}</strong> - ${song.artist}
-                    </div>
-                    <i class="fas fa-play-circle control-btn"></i>
-                    <i class="fas fa-minus-circle remove-btn"></i>
-                `;
-
-                playlist.appendChild(li);
             });
         }
 
