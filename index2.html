@@ -49,9 +49,11 @@
             flex-grow: 1;
             text-align: left;
         }
-        .play-icon {
-            font-size: 1.5em;
+        .control-btn {
+            font-size: 1.2em;
             color: #4CAF50;
+            cursor: pointer;
+            margin: 5px;
         }
         .add-btn {
             font-size: 1.2em;
@@ -81,58 +83,77 @@
         <ul id="music-list"></ul>
 
         <div class="playlist-container">
-            <h3>我的播放清單</h3>
+            <h3>播放清單</h3>
             <ul id="playlist"></ul>
         </div>
 
         <audio id="audio-player" controls></audio>
+        
+        <button id="prev" class="control-btn"><i class="fas fa-backward"></i></button>
+        <button id="next" class="control-btn"><i class="fas fa-forward"></i></button>
+        <button id="shuffle" class="control-btn"><i class="fas fa-random"></i></button>
     </div>
 
     <script>
         const musicList = document.getElementById('music-list');
         const playlist = document.getElementById('playlist');
         const audioPlayer = document.getElementById('audio-player');
+        const prevBtn = document.getElementById('prev');
+        const nextBtn = document.getElementById('next');
+        const shuffleBtn = document.getElementById('shuffle');
 
+        let songs = [];
         let userPlaylist = [];
+        let currentIndex = 0;
+        let isShuffle = false;
 
-        fetch('music_data.json') // 確保 JSON 放在正確路徑
+        fetch('music_data.json')
             .then(response => response.json())
-            .then(songs => {
-                songs.forEach((song, index) => {
-                    const li = document.createElement('li');
-
-                    li.innerHTML = `
-                        <img src="${song.cover}" class="cover-art">
-                        <div class="song-info">
-                            <strong>${song.title}</strong> - ${song.artist}
-                        </div>
-                        <i class="fas fa-play-circle play-icon"></i>
-                        <i class="fas fa-plus-circle add-btn"></i>
-                    `;
-
-                    // 點擊播放
-                    li.querySelector('.play-icon').addEventListener('click', () => {
-                        audioPlayer.src = song.src;
-                        audioPlayer.play();
-                    });
-
-                    // 點擊加入播放清單
-                    li.querySelector('.add-btn').addEventListener('click', () => {
-                        if (!userPlaylist.some(item => item.title === song.title)) {
-                            userPlaylist.push(song);
-                            updatePlaylist();
-                        }
-                    });
-
-                    musicList.appendChild(li);
-                });
+            .then(data => {
+                songs = data;
+                loadMusicLibrary();
             })
             .catch(error => console.error('載入音樂失敗:', error));
 
-        // 更新播放清單
-        function updatePlaylist() {
-            playlist.innerHTML = ''; // 清空播放清單
+        function loadMusicLibrary() {
+            songs.forEach((song, index) => {
+                const li = document.createElement('li');
 
+                li.innerHTML = `
+                    <img src="${song.cover}" class="cover-art">
+                    <div class="song-info">
+                        <strong>${song.title}</strong> - ${song.artist}
+                    </div>
+                    <i class="fas fa-play-circle control-btn"></i>
+                    <i class="fas fa-plus-circle add-btn"></i>
+                `;
+
+                // 點擊播放
+                li.querySelector('.control-btn').addEventListener('click', () => {
+                    currentIndex = index;
+                    playSong();
+                });
+
+                // 點擊加入播放清單
+                li.querySelector('.add-btn').addEventListener('click', () => {
+                    if (!userPlaylist.some(item => item.title === song.title)) {
+                        userPlaylist.push(song);
+                        updatePlaylist();
+                    }
+                });
+
+                musicList.appendChild(li);
+            });
+        }
+
+        function playSong() {
+            const song = songs[currentIndex];
+            audioPlayer.src = song.src;
+            audioPlayer.play();
+        }
+
+        function updatePlaylist() {
+            playlist.innerHTML = '';
             userPlaylist.forEach((song, index) => {
                 const li = document.createElement('li');
 
@@ -141,17 +162,15 @@
                     <div class="song-info">
                         <strong>${song.title}</strong> - ${song.artist}
                     </div>
-                    <i class="fas fa-play-circle play-icon"></i>
+                    <i class="fas fa-play-circle control-btn"></i>
                     <i class="fas fa-minus-circle remove-btn"></i>
                 `;
 
-                // 點擊播放
-                li.querySelector('.play-icon').addEventListener('click', () => {
-                    audioPlayer.src = song.src;
-                    audioPlayer.play();
+                li.querySelector('.control-btn').addEventListener('click', () => {
+                    currentIndex = songs.findIndex(s => s.title === song.title);
+                    playSong();
                 });
 
-                // 點擊移除歌曲
                 li.querySelector('.remove-btn').addEventListener('click', () => {
                     userPlaylist.splice(index, 1);
                     updatePlaylist();
@@ -160,6 +179,28 @@
                 playlist.appendChild(li);
             });
         }
+
+        // 上一首歌曲
+        prevBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex - 1 + songs.length) % songs.length;
+            playSong();
+        });
+
+        // 下一首歌曲
+        nextBtn.addEventListener('click', () => {
+            if (isShuffle) {
+                currentIndex = Math.floor(Math.random() * songs.length);
+            } else {
+                currentIndex = (currentIndex + 1) % songs.length;
+            }
+            playSong();
+        });
+
+        // 隨機播放模式
+        shuffleBtn.addEventListener('click', () => {
+            isShuffle = !isShuffle;
+            shuffleBtn.style.backgroundColor = isShuffle ? '#4CAF50' : '';
+        });
     </script>
 </body>
 </html>
