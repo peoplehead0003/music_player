@@ -104,7 +104,7 @@
             <button class="filter-btn" data-filter="album">專輯</button>
         </div>
 
-        <h3>所有歌曲</h3>
+        <h3 id="list-title">所有歌曲</h3>
         <ul id="music-list"></ul>
 
         <div class="playlist-container">
@@ -127,6 +127,7 @@
         const nextBtn = document.getElementById('next');
         const shuffleBtn = document.getElementById('shuffle');
         const filterBtns = document.querySelectorAll('.filter-btn');
+        const listTitle = document.getElementById('list-title');
 
         let songs = [];
         let userPlaylist = [];
@@ -156,6 +157,7 @@
 
         function showArtists() {
             musicList.innerHTML = '';
+            listTitle.textContent = "歌手列表";
 
             const uniqueArtists = [...new Set(songs.map(song => song.artist))];
 
@@ -163,7 +165,7 @@
                 const li = document.createElement('li');
                 li.textContent = artist;
                 li.classList.add('artist-name');
-                
+
                 li.addEventListener('click', () => {
                     currentArtist = artist;
                     showSongsByArtist();
@@ -175,6 +177,7 @@
 
         function showSongsByArtist() {
             musicList.innerHTML = '';
+            listTitle.textContent = `歌手 - ${currentArtist}`;
 
             songs.filter(song => song.artist === currentArtist).forEach(song => {
                 const li = document.createElement('li');
@@ -185,7 +188,6 @@
                         <strong>${song.title}</strong> - ${song.artist} (${song.album})
                     </div>
                     <i class="fas fa-play-circle control-btn"></i>
-                    <i class="fas fa-plus-circle add-btn"></i>
                 `;
 
                 li.querySelector('.control-btn').addEventListener('click', () => {
@@ -196,10 +198,6 @@
                 musicList.appendChild(li);
             });
         }
-
-        prevBtn.addEventListener('click', () => { currentIndex = (currentIndex - 1 + songs.length) % songs.length; playSong(); });
-        nextBtn.addEventListener('click', () => { currentIndex = isShuffle ? Math.floor(Math.random() * songs.length) : (currentIndex + 1) % songs.length; playSong(); });
-        shuffleBtn.addEventListener('click', () => { isShuffle = !isShuffle; shuffleBtn.style.backgroundColor = isShuffle ? '#4CAF50' : ''; });
     </script>
 </body>
 </html>
