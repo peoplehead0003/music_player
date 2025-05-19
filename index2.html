@@ -243,7 +243,26 @@
             if (songs.length > 0 && currentIndex >= 0 && currentIndex < songs.length) {
                 audioPlayer.src = songs[currentIndex].src;
                 audioPlayer.play();
-                updatePlayingStatus();
+        
+                // 清除所有歌曲的播放中圖示
+                const allSongItems = document.querySelectorAll('#music-list li');
+                allSongItems.forEach(item => {
+                    item.classList.remove('playing');
+                    const playIcon = item.querySelector('.fa-play-circle');
+                    if (playIcon) {
+                        playIcon.classList.remove('active');
+                    }
+                });
+        
+                // 標示當前播放中的歌曲
+                const currentSongElement = document.querySelector(`#music-list li:nth-child(${currentIndex + 1})`);
+                if (currentSongElement) {
+                    currentSongElement.classList.add('playing');
+                    const playIcon = currentSongElement.querySelector('.fa-play-circle');
+                    if (playIcon) {
+                        playIcon.classList.add('active'); // 播放中的圖示高亮
+                    }
+                }
             }
         }
 
