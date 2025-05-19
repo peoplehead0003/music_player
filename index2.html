@@ -92,6 +92,22 @@
             border-top: 2px solid #ddd;
             padding-top: 15px;
         }
+        .playing {
+            color: #4CAF50;
+            animation: pulsate 1s infinite;
+        }
+
+        @keyframes pulsate {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
     </style>
 </head>
 <body>
@@ -120,236 +136,151 @@
     </div>
 
     <script>
-        const musicList = document.getElementById('music-list');
-        const playlist = document.getElementById('playlist');
-        const audioPlayer = document.getElementById('audio-player');
-        const prevBtn = document.getElementById('prev');
-        const nextBtn = document.getElementById('next');
-        const shuffleBtn = document.getElementById('shuffle');
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        const listTitle = document.getElementById('list-title');
+        const musicList = document.getElementById('music-list');
+        const playlist = document.getElementById('playlist');
+        const audioPlayer = document.getElementById('audio-player');
+        const prevBtn = document.getElementById('prev');
+        const nextBtn = document.getElementById('next');
+        const shuffleBtn = document.getElementById('shuffle');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const listTitle = document.getElementById('list-title');
 
-        let songs = [];
-        let userPlaylist = [];
-        let currentIndex = 0;
-        let isShuffle = false;
-        let filterType = 'all';
-        let currentArtist = '';
-        let currentAlbum = '';
+        let songs = [];
+        let userPlaylist = [];
+        let currentIndex = 0;
+        let isShuffle = false;
+        let filterType = 'all';
+        let currentArtist = '';
+        let currentAlbum = '';
 
-        fetch('music_data.json')
-            .then(response => response.json())
-            .then(data => {
-                songs = data;
-                loadMusicLibrary();
-            })
-            .catch(error => console.error('載入音樂失敗:', error));
+        fetch('music_data.json')
+            .then(response => response.json())
+            .then(data => {
+                songs = data;
+                loadMusicLibrary();
+            })
+            .catch(error => console.error('載入音樂失敗:', error));
 
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                filterType = btn.getAttribute('data-filter');
-                if (filterType === 'artist') {
-                    showArtists();
-                } else if (filterType === 'album') {
-                    showAlbums();
-                } else {
-                    loadMusicLibrary();
-                }
-            });
-        });
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterType = btn.getAttribute('data-filter');
+                if (filterType === 'artist') {
+                    showArtists();
+                } else if (filterType === 'album') {
+                    showAlbums();
+                } else {
+                    loadMusicLibrary();
+                }
+            });
+        });
 
-        function loadMusicLibrary() {
-            musicList.innerHTML = '';
-            listTitle.textContent = "所有歌曲";
-            songs.forEach(song => {
-                const li = createSongListItem(song);
-                musicList.appendChild(li);
-            });
-        }
+        function loadMusicLibrary() {
+            musicList.innerHTML = '';
+            listTitle.textContent = "所有歌曲";
+            songs.forEach(song => {
+                const li = createSongListItem(song);
+                musicList.appendChild(li);
+            });
+        }
 
-        function showArtists() {
-            musicList.innerHTML = '';
-            listTitle.textContent = "歌手列表";
+        function createSongListItem(song) {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <img src="${song.cover}" class="cover-art">
+                <div class="song-info">
+                    <strong>${song.title}</strong> - ${song.artist} (${song.album})
+                </div>
+                <i class="fas fa-play-circle control-btn"></i>
+                <i class="fas fa-plus-circle add-btn"></i>
+            `;
 
-            const uniqueArtists = [...new Set(songs.map(song => song.artist))];
+            li.querySelector('.control-btn').addEventListener('click', () => {
+                currentIndex = songs.indexOf(song);
+                playSong();
+            });
 
-            uniqueArtists.forEach(artist => {
-                const li = document.createElement('li');
-                li.textContent = artist;
-                li.classList.add('artist-name');
-                li.addEventListener('click', () => {
-                    currentArtist = artist;
-                    showSongsByArtist();
-                });
-                musicList.appendChild(li);
-            });
-        }
+            li.querySelector('.add-btn').addEventListener('click', () => {
+                addToPlaylist(song);
+            });
 
-        function showSongsByArtist() {
-            musicList.innerHTML = '';
-            listTitle.textContent = `歌手 - ${currentArtist}`;
-            songs.filter(song => song.artist === currentArtist).forEach(song => {
-                const li = createSongListItem(song);
-                musicList.appendChild(li);
-            });
-        }
+            return li;
+        }
 
-        function showAlbums() {
-            musicList.innerHTML = '';
-            listTitle.textContent = "專輯列表";
+        function playSong() {
+            if (songs.length > 0 && currentIndex >= 0 && currentIndex < songs.length) {
+                audioPlayer.src = songs[currentIndex].src;
+                audioPlayer.play();
+                updatePlayingStatus();
+            }
+        }
 
-            const uniqueAlbums = [...new Set(songs.map(song => song.album))];
+        function updatePlayingStatus() {
+            // 移除所有歌曲的播放中狀態
+            const allSongs = document.querySelectorAll('#music-list li, #playlist li');
+            allSongs.forEach(item => {
+                item.classList.remove('playing');
+            });
 
-            uniqueAlbums.forEach(album => {
-                const li = document.createElement('li');
-                li.textContent = album;
-                li.classList.add('album-name');
-                li.addEventListener('click', () => {
-                    currentAlbum = album;
-                    showSongsByAlbum();
-                });
-                musicList.appendChild(li);
-            });
-        }
+            // 將當前播放的歌曲加上「播放中」的class
+            const currentSongElement = document.querySelector(`#music-list li:nth-child(${currentIndex + 1})`);
+            if (currentSongElement) {
+                currentSongElement.classList.add('playing');
+            }
 
-        function showSongsByAlbum() {
-            musicList.innerHTML = '';
-            listTitle.textContent = `專輯 - ${currentAlbum}`;
-            songs.filter(song => song.album === currentAlbum).forEach(song => {
-                const li = createSongListItem(song);
-                musicList.appendChild(li);
-            });
-        }
+            // 在播放清單中也標示「播放中」
+            const currentPlaylistItem = Array.from(playlist.children).find(item => item.querySelector('.control-btn').dataset.index == currentIndex);
+            if (currentPlaylistItem) {
+                currentPlaylistItem.classList.add('playing');
+            }
+        }
 
-        function createSongListItem(song) {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <img src="${song.cover}" class="cover-art">
-                <div class="song-info">
-                    <strong>${song.title}</strong> - ${song.artist} (${song.album})
-                </div>
-                <i class="fas fa-play-circle control-btn"></i>
-                <i class="fas fa-plus-circle add-btn"></i>
-            `;
+        function addToPlaylist(song) {
+            if (!userPlaylist.some(item => item.src === song.src)) {
+                userPlaylist.push(song);
+                renderPlaylist();
+            }
+        }
 
-            li.querySelector('.control-btn').addEventListener('click', () => {
-                currentIndex = songs.indexOf(song);
-                playSong();
-            });
+        function renderPlaylist() {
+            playlist.innerHTML = '';
+            userPlaylist.forEach((song, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <img src="${song.cover}" class="cover-art">
+                    <div class="song-info">
+                        <strong>${song.title}</strong> - ${song.artist}
+                    </div>
+                    <i class="fas fa-play-circle control-btn" data-index="${index}"></i>
+                    <i class="fas fa-minus-circle remove-btn" data-index="${index}"></i>
+                `;
 
-            li.querySelector('.add-btn').addEventListener('click', () => {
-                addToPlaylist(song);
-            });
+                li.querySelector('.control-btn').addEventListener('click', (event) => {
+                    const playIndex = parseInt(event.target.getAttribute('data-index'));
+                    playPlaylistSong(playIndex);
+                });
 
-            return li;
-        }
+                li.querySelector('.remove-btn').addEventListener('click', (event) => {
+                    const removeIndex = parseInt(event.target.getAttribute('data-index'));
+                    removeFromPlaylist(removeIndex);
+                });
 
-        function playSong() {
-            if (songs.length > 0 && currentIndex >= 0 && currentIndex < songs.length) {
-                audioPlayer.src = songs[currentIndex].src;
-                audioPlayer.play();
-            }
-        }
+                playlist.appendChild(li);
+            });
+        }
 
-        function addToPlaylist(song) {
-            if (!userPlaylist.some(item => item.src === song.src)) {
-                userPlaylist.push(song);
-                renderPlaylist();
-            }
-        }
+        function playPlaylistSong(index) {
+            if (userPlaylist.length > 0 && index >= 0 && index < userPlaylist.length) {
+                audioPlayer.src = userPlaylist[index].src;
+                currentIndex = songs.findIndex(song => song.src === userPlaylist[index].src);
+                audioPlayer.play();
+                updatePlayingStatus();
+            }
+        }
 
-        function renderPlaylist() {
-            playlist.innerHTML = '';
-            userPlaylist.forEach((song, index) => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <img src="${song.cover}" class="cover-art">
-                    <div class="song-info">
-                        <strong>${song.title}</strong> - ${song.artist}
-                    </div>
-                    <i class="fas fa-play-circle control-btn" data-index="${index}"></i>
-                    <i class="fas fa-minus-circle remove-btn" data-index="${index}"></i>
-                `;
-
-                li.querySelector('.control-btn').addEventListener('click', (event) => {
-                    const playIndex = parseInt(event.target.getAttribute('data-index'));
-                    playPlaylistSong(playIndex);
-                });
-
-                li.querySelector('.remove-btn').addEventListener('click', (event) => {
-                    const removeIndex = parseInt(event.target.getAttribute('data-index'));
-                    removeFromPlaylist(removeIndex);
-                });
-
-                playlist.appendChild(li);
-            });
-        }
-
-        function playPlaylistSong(index) {
-            if (userPlaylist.length > 0 && index >= 0 && index < userPlaylist.length) {
-                audioPlayer.src = userPlaylist[index].src;
-                audioPlayer.play();
-                currentIndex= -1; // Indicate that we are playing from the playlist
-            }
-        }
-
-        function removeFromPlaylist(index) {
-            if (index >= 0 && index < userPlaylist.length) {
-                userPlaylist.splice(index, 1);
-                renderPlaylist();
-            }
-        }
-
-        prevBtn.addEventListener('click', () => {
-            if (currentIndex > 0) {
-                currentIndex--;
-                playSong();
-            } else if (userPlaylist.length > 0 && currentIndex === -1) {
-                // If playing from playlist, go to the previous song in playlist
-                const currentPlaylistIndex = userPlaylist.findIndex(song => song.src === audioPlayer.src);
-                if (currentPlaylistIndex > 0) {
-                    playPlaylistSong(currentPlaylistIndex - 1);
-                }
-            }
-        });
-
-        nextBtn.addEventListener('click', () => {
-            if (currentIndex < songs.length - 1 && currentIndex >= 0) {
-                currentIndex++;
-                playSong();
-            } else if (userPlaylist.length > 0 && currentIndex === -1) {
-                // If playing from playlist, go to the next song in playlist
-                const currentPlaylistIndex = userPlaylist.findIndex(song => song.src === audioPlayer.src);
-                if (currentPlaylistIndex < userPlaylist.length - 1) {
-                    playPlaylistSong(currentPlaylistIndex + 1);
-                }
-            }
-        });
-
-        shuffleBtn.addEventListener('click', () => {
-            isShuffle = !isShuffle;
-            shuffleBtn.classList.toggle('active', isShuffle);
-            // TODO: Implement shuffle logic
-        });
-
-        audioPlayer.addEventListener('ended', () => {
-            if (userPlaylist.length > 0 && currentIndex === -1) {
-                // If playing from playlist, play the next song
-                const currentPlaylistIndex = userPlaylist.findIndex(song => song.src === audioPlayer.src);
-                if (currentPlaylistIndex < userPlaylist.length - 1) {
-                    playPlaylistSong(currentPlaylistIndex + 1);
-                }
-            } else if (songs.length > 0 && currentIndex >= 0 && currentIndex < songs.length - 1 && !isShuffle) {
-                nextBtn.click(); // Simulate clicking next button
-            } else if (songs.length > 0 && isShuffle) {
-                let randomIndex = Math.floor(Math.random() * songs.length);
-                while (randomIndex === currentIndex) {
-                    randomIndex = Math.floor(Math.random() * songs.length);
-                }
-                currentIndex = randomIndex;
-                playSong();
-            }
-        });
-    </script>
+        function removeFromPlaylist(index) {
+            userPlaylist.splice(index, 1);
+            renderPlaylist();
+        }
+    </script>
 </body>
 </html>
