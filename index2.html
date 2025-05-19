@@ -246,13 +246,13 @@
 
         function playSong() {
             if (songs.length > 0 && currentIndex >= 0 && currentIndex < songs.length) {
-                audioPlayer.src = songs[currentIndex].url;
+                audioPlayer.src = songs[currentIndex].src;
                 audioPlayer.play();
             }
         }
 
         function addToPlaylist(song) {
-            if (!userPlaylist.some(item => item.url === song.url)) {
+            if (!userPlaylist.some(item => item.src === song.src)) {
                 userPlaylist.push(song);
                 renderPlaylist();
             }
@@ -287,7 +287,7 @@
 
         function playPlaylistSong(index) {
             if (userPlaylist.length > 0 && index >= 0 && index < userPlaylist.length) {
-                audioPlayer.src = userPlaylist[index].url;
+                audioPlayer.src = userPlaylist[index].src;
                 audioPlayer.play();
                 currentIndex= -1; // Indicate that we are playing from the playlist
             }
@@ -306,7 +306,7 @@
                 playSong();
             } else if (userPlaylist.length > 0 && currentIndex === -1) {
                 // If playing from playlist, go to the previous song in playlist
-                const currentPlaylistIndex = userPlaylist.findIndex(song => song.url === audioPlayer.src);
+                const currentPlaylistIndex = userPlaylist.findIndex(song => song.src === audioPlayer.src);
                 if (currentPlaylistIndex > 0) {
                     playPlaylistSong(currentPlaylistIndex - 1);
                 }
@@ -319,7 +319,7 @@
                 playSong();
             } else if (userPlaylist.length > 0 && currentIndex === -1) {
                 // If playing from playlist, go to the next song in playlist
-                const currentPlaylistIndex = userPlaylist.findIndex(song => song.url === audioPlayer.src);
+                const currentPlaylistIndex = userPlaylist.findIndex(song => song.src === audioPlayer.src);
                 if (currentPlaylistIndex < userPlaylist.length - 1) {
                     playPlaylistSong(currentPlaylistIndex + 1);
                 }
@@ -335,7 +335,7 @@
         audioPlayer.addEventListener('ended', () => {
             if (userPlaylist.length > 0 && currentIndex === -1) {
                 // If playing from playlist, play the next song
-                const currentPlaylistIndex = userPlaylist.findIndex(song => song.url === audioPlayer.src);
+                const currentPlaylistIndex = userPlaylist.findIndex(song => song.src === audioPlayer.src);
                 if (currentPlaylistIndex < userPlaylist.length - 1) {
                     playPlaylistSong(currentPlaylistIndex + 1);
                 }
