@@ -24,6 +24,24 @@
         h1 {
             color: #333;
         }
+        .filter-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .filter-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .filter-btn:hover {
+            background: #45a049;
+        }
         #music-list, #playlist {
             list-style: none;
             padding: 0;
@@ -79,6 +97,13 @@
 <body>
     <div class="library-container">
         <h1>我的音樂管理庫</h1>
+
+        <div class="filter-container">
+            <button class="filter-btn" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="artist">歌手</button>
+            <button class="filter-btn" data-filter="album">專輯</button>
+        </div>
+
         <h3>所有歌曲</h3>
         <ul id="music-list"></ul>
 
@@ -101,11 +126,13 @@
         const prevBtn = document.getElementById('prev');
         const nextBtn = document.getElementById('next');
         const shuffleBtn = document.getElementById('shuffle');
+        const filterBtns = document.querySelectorAll('.filter-btn');
 
         let songs = [];
         let userPlaylist = [];
         let currentIndex = 0;
         let isShuffle = false;
+        let filterType = 'all';
 
         fetch('music_data.json')
             .then(response => response.json())
@@ -115,26 +142,43 @@
             })
             .catch(error => console.error('載入音樂失敗:', error));
 
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterType = btn.getAttribute('data-filter');
+                loadMusicLibrary();
+            });
+        });
+
         function loadMusicLibrary() {
-            songs.forEach((song, index) => {
+            musicList.innerHTML = '';
+
+            let filteredSongs = songs;
+
+            if (filterType === 'artist') {
+                filteredSongs = songs.filter((song, index, self) =>
+                    index === self.findIndex(s => s.artist === song.artist));
+            } else if (filterType === 'album') {
+                filteredSongs = songs.filter((song, index, self) =>
+                    index === self.findIndex(s => s.album === song.album));
+            }
+
+            filteredSongs.forEach((song, index) => {
                 const li = document.createElement('li');
 
                 li.innerHTML = `
                     <img src="${song.cover}" class="cover-art">
                     <div class="song-info">
-                        <strong>${song.title}</strong> - ${song.artist}
+                        <strong>${song.title}</strong> - ${song.artist} (${song.album})
                     </div>
                     <i class="fas fa-play-circle control-btn"></i>
                     <i class="fas fa-plus-circle add-btn"></i>
                 `;
 
-                // 點擊播放
                 li.querySelector('.control-btn').addEventListener('click', () => {
-                    currentIndex = index;
+                    currentIndex = songs.indexOf(song);
                     playSong();
                 });
 
-                // 點擊加入播放清單
                 li.querySelector('.add-btn').addEventListener('click', () => {
                     if (!userPlaylist.some(item => item.title === song.title)) {
                         userPlaylist.push(song);
@@ -166,41 +210,13 @@
                     <i class="fas fa-minus-circle remove-btn"></i>
                 `;
 
-                li.querySelector('.control-btn').addEventListener('click', () => {
-                    currentIndex = songs.findIndex(s => s.title === song.title);
-                    playSong();
-                });
-
-                li.querySelector('.remove-btn').addEventListener('click', () => {
-                    userPlaylist.splice(index, 1);
-                    updatePlaylist();
-                });
-
                 playlist.appendChild(li);
             });
         }
 
-        // 上一首歌曲
-        prevBtn.addEventListener('click', () => {
-            currentIndex = (currentIndex - 1 + songs.length) % songs.length;
-            playSong();
-        });
-
-        // 下一首歌曲
-        nextBtn.addEventListener('click', () => {
-            if (isShuffle) {
-                currentIndex = Math.floor(Math.random() * songs.length);
-            } else {
-                currentIndex = (currentIndex + 1) % songs.length;
-            }
-            playSong();
-        });
-
-        // 隨機播放模式
-        shuffleBtn.addEventListener('click', () => {
-            isShuffle = !isShuffle;
-            shuffleBtn.style.backgroundColor = isShuffle ? '#4CAF50' : '';
-        });
+        prevBtn.addEventListener('click', () => { currentIndex = (currentIndex - 1 + songs.length) % songs.length; playSong(); });
+        nextBtn.addEventListener('click', () => { currentIndex = isShuffle ? Math.floor(Math.random() * songs.length) : (currentIndex + 1) % songs.length; playSong(); });
+        shuffleBtn.addEventListener('click', () => { isShuffle = !isShuffle; shuffleBtn.style.backgroundColor = isShuffle ? '#4CAF50' : ''; });
     </script>
 </body>
 </html>
