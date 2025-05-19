@@ -333,8 +333,31 @@
                 audioPlayer.src = userPlaylist[index].src;
                 audioPlayer.play();
                 currentIndex = -1; // 表示從播放清單播放
+        
+                // 清除播放清單中所有歌曲的播放中狀態
+                const allPlaylistItems = document.querySelectorAll('#playlist li');
+                allPlaylistItems.forEach(item => {
+                    item.classList.remove('playing');
+                });
+        
+                // 清除音樂庫中所有歌曲的播放中圖示
+                const allSongItems = document.querySelectorAll('#music-list li');
+                allSongItems.forEach(item => {
+                    item.classList.remove('playing');
+                    const playIcon = item.querySelector('.fa-play-circle');
+                    if (playIcon) {
+                        playIcon.classList.remove('active');
+                    }
+                });
+        
+                // 在播放清單中標示該歌曲為播放中
+                const currentPlaylistItem = document.querySelector(`#playlist li:nth-child(${index + 1})`);
+                if (currentPlaylistItem) {
+                    currentPlaylistItem.classList.add('playing');
+                }
             }
         }
+
 
         function removeFromPlaylist(index) {
             if (index >= 0 && index < userPlaylist.length) {
