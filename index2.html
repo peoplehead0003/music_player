@@ -254,7 +254,13 @@
                     addToPlaylist(songs[currentIndex]);
                 }
         
-                // 清除所有歌曲的播放中圖示
+                // 清除播放清單中所有歌曲的播放中狀態
+                const allPlaylistItems = document.querySelectorAll('#playlist li');
+                allPlaylistItems.forEach(item => {
+                    item.classList.remove('playing');
+                });
+        
+                // 清除音樂庫中所有歌曲的播放中圖示
                 const allSongItems = document.querySelectorAll('#music-list li');
                 allSongItems.forEach(item => {
                     item.classList.remove('playing');
@@ -270,11 +276,18 @@
                     currentSongElement.classList.add('playing');
                     const playIcon = currentSongElement.querySelector('.fa-play-circle');
                     if (playIcon) {
-                        playIcon.classList.add('active'); // 播放中的圖示高亮
+                        playIcon.classList.add('active');
                     }
+                }
+        
+                // 在播放清單中標示該歌曲為播放中
+                const currentPlaylistItem = document.querySelector(`#playlist li:nth-child(${userPlaylist.indexOf(songs[currentIndex]) + 1})`);
+                if (currentPlaylistItem) {
+                    currentPlaylistItem.classList.add('playing');
                 }
             }
         }
+
 
         function updatePlayingStatus() {
             // 移除所有歌曲的播放中標籤
