@@ -1,1 +1,20 @@
-
+[
+    {
+        title: '南北二路',
+        artist: '玖壹壹(Nine one one)',
+        src: 'song/玖壹壹(Nine one one) - 南北二路 LAN PA LI ROAD 官方MV首播.mp3', // 請確保這個路徑是正確的
+        cover: 'cover/南北二路.jpg' // 請確保這個路徑是正確的
+    },
+    {
+        title: '城市夜晚',
+        artist: '夢想家',
+        src: 'music/sample_music2.mp3', // 請確保這個路徑是正確的
+        cover: 'images/cover2.jpg' // 請確保這個路徑是正確的
+    },
+    {
+        title: '和平之歌',
+        artist: '自由之聲',
+        src: 'music/sample_music3.mp3', // 請確保這個路徑是正確的
+        cover: 'images/cover3.jpg' // 請確保這個路徑是正確的
+    }
+]
