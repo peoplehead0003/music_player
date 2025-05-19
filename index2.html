@@ -378,6 +378,23 @@
             }
         }
 
+        audioPlayer.addEventListener('ended', () => {
+            // 如果啟用了隨機播放
+            if (isShuffle && userPlaylist.length > 0) {
+                let randomIndex = Math.floor(Math.random() * userPlaylist.length);
+                playPlaylistSong(randomIndex);
+            } else {
+                // 正常順序播放
+                if (currentIndex < songs.length - 1) {
+                    currentIndex++;
+                    playSong();
+                } else {
+                    // 如果播放到最後一首歌，重頭開始
+                    currentIndex = 0;
+                    playSong();
+                }
+            }
+        });
         prevBtn.addEventListener('click', () => {
             if (currentIndex === -1 && userPlaylist.length > 0) {
                 // 如果播放清單有歌曲並且目前播放的是清單中的歌曲
@@ -393,31 +410,27 @@
         });
         
         nextBtn.addEventListener('click', () => {
-            if (currentIndex === -1 && userPlaylist.length > 0) {
-                // 如果播放清單有歌曲並且目前播放的是清單中的歌曲
-                const currentPlaylistIndex = userPlaylist.findIndex(song => song.src === audioPlayer.src);
-                if (currentPlaylistIndex < userPlaylist.length - 1) {
-                    playPlaylistSong(currentPlaylistIndex + 1);
+            if (isShuffle && userPlaylist.length > 0) {
+                let randomIndex = Math.floor(Math.random() * userPlaylist.length);
+                playPlaylistSong(randomIndex);
+            } else {
+                if (currentIndex < songs.length - 1) {
+                    currentIndex++;
+                    playSong();
+                } else {
+                    // 如果播放到最後一首歌，重頭開始
+                    currentIndex = 0;
+                    playSong();
                 }
-            } else if (currentIndex < songs.length - 1) {
-                // 音樂庫中的歌曲
-                currentIndex++;
-                playSong();
             }
         });
 
         shuffleBtn.addEventListener('click', () => {
             isShuffle = !isShuffle;
             shuffleBtn.classList.toggle('active', isShuffle);
-        
             if (isShuffle && userPlaylist.length > 0) {
                 let randomIndex = Math.floor(Math.random() * userPlaylist.length);
                 playPlaylistSong(randomIndex);
-            } else if (!isShuffle) {
-                // 可以繼續按照正常的順序播放
-                if (currentIndex < songs.length - 1) {
-                    nextBtn.click(); // Simulate clicking next button
-                }
             }
         });
 
