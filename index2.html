@@ -372,7 +372,6 @@
         }
 
 
-
         function removeFromPlaylist(index) {
             if (index >= 0 && index < userPlaylist.length) {
                 userPlaylist.splice(index, 1);
@@ -381,49 +380,23 @@
         }
 
         prevBtn.addEventListener('click', () => {
-            if (currentIndex === -1 && userPlaylist.length > 0) {
-                // 如果播放清單有歌曲並且目前播放的是清單中的歌曲
-                const currentPlaylistIndex = userPlaylist.findIndex(song => song.src === audioPlayer.src);
-                if (currentPlaylistIndex > 0) {
-                    playPlaylistSong(currentPlaylistIndex - 1);
-                }
-            } else if (currentIndex > 0) {
-                // 音樂庫中的歌曲
+            if (currentIndex > 0) {
                 currentIndex--;
                 playSong();
             }
         });
-        
+
         nextBtn.addEventListener('click', () => {
-            if (currentIndex === -1 && userPlaylist.length > 0) {
-                // 如果播放清單有歌曲並且目前播放的是清單中的歌曲
-                const currentPlaylistIndex = userPlaylist.findIndex(song => song.src === audioPlayer.src);
-                if (currentPlaylistIndex < userPlaylist.length - 1) {
-                    playPlaylistSong(currentPlaylistIndex + 1);
-                }
-            } else if (currentIndex < songs.length - 1) {
-                // 音樂庫中的歌曲
+            if (currentIndex < songs.length - 1) {
                 currentIndex++;
                 playSong();
             }
-        });`
-
+        });
 
         shuffleBtn.addEventListener('click', () => {
             isShuffle = !isShuffle;
             shuffleBtn.classList.toggle('active', isShuffle);
-        
-            if (isShuffle && userPlaylist.length > 0) {
-                let randomIndex = Math.floor(Math.random() * userPlaylist.length);
-                playPlaylistSong(randomIndex);
-            } else if (!isShuffle) {
-                // 可以繼續按照正常的順序播放
-                if (currentIndex < songs.length - 1) {
-                    nextBtn.click(); // Simulate clicking next button
-                }
-            }
         });
-
 
     </script>
 </body>
