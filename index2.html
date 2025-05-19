@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音樂管理庫</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .library-container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        #music-list {
+            list-style: none;
+            padding: 0;
+        }
+        #music-list li {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #music-list li:hover {
+            background: #f9f9f9;
+        }
+        .cover-art {
+            width: 60px;
+            height: 60px;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .song-info {
+            flex-grow: 1;
+            text-align: left;
+        }
+        .play-icon {
+            font-size: 1.5em;
+            color: #4CAF50;
+        }
+        audio {
+            margin-top: 20px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="library-container">
+        <h1>我的音樂管理庫</h1>
+        <ul id="music-list"></ul>
+        <audio id="audio-player" controls></audio>
+    </div>
+
+    <script>
+        const musicList = document.getElementById('music-list');
+        const audioPlayer = document.getElementById('audio-player');
+
+        fetch('music_data.json') // 確保 JSON 放在正確路徑
+            .then(response => response.json())
+            .then(songs => {
+                songs.forEach((song, index) => {
+                    const li = document.createElement('li');
+
+                    li.innerHTML = `
+                        <img src="${song.cover}" class="cover-art">
+                        <div class="song-info">
+                            <strong>${song.title}</strong> - ${song.artist}
+                        </div>
+                        <i class="fas fa-play-circle play-icon"></i>
+                    `;
+
+                    li.addEventListener('click', () => {
+                        audioPlayer.src = song.src;
+                        audioPlayer.play();
+                    });
+
+                    musicList.appendChild(li);
+                });
+            })
+            .catch(error => console.error('載入音樂失敗:', error));
+    </script>
+</body>
+</html>
