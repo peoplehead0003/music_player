@@ -93,10 +93,14 @@
             margin-top: 20px;
             width: 100%;
         }
-        .playlist-container {
-            margin-top: 30px;
-            border-top: 2px solid #ddd;
-            padding-top: 15px;
+        .playlist-container .control-btn {
+            color: #4CAF50;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .playlist-container .remove-btn {
+            color: red;
+            cursor: pointer;
         }
         .playing {
             color: #4CAF50;
@@ -226,16 +230,16 @@
                 <i class="fas fa-play-circle control-btn"></i>
                 <i class="fas fa-plus-circle add-btn"></i>
             `;
-
+        
             li.querySelector('.control-btn').addEventListener('click', () => {
                 currentIndex = songs.indexOf(song);
                 playSong();
             });
-
+        
             li.querySelector('.add-btn').addEventListener('click', () => {
                 addToPlaylist(song);
             });
-
+        
             return li;
         }
 
@@ -243,6 +247,12 @@
             if (songs.length > 0 && currentIndex >= 0 && currentIndex < songs.length) {
                 audioPlayer.src = songs[currentIndex].src;
                 audioPlayer.play();
+        
+                // 如果歌曲未在播放清單中，則添加到播放清單
+                const songInPlaylist = userPlaylist.some(song => song.src === songs[currentIndex].src);
+                if (!songInPlaylist) {
+                    addToPlaylist(songs[currentIndex]);
+                }
         
                 // 清除所有歌曲的播放中圖示
                 const allSongItems = document.querySelectorAll('#music-list li');
@@ -286,7 +296,7 @@
         }
 
         function addToPlaylist(song) {
-            if (!userPlaylist.includes(song)) {
+            if (!userPlaylist.some(item => item.src === song.src)) {
                 userPlaylist.push(song);
                 renderPlaylist();
             }
@@ -297,19 +307,40 @@
             userPlaylist.forEach((song, index) => {
                 const li = document.createElement('li');
                 li.innerHTML = `
-                    <div class="song-info">${song.title} - ${song.artist}</div>
-                    <i class="fas fa-minus-circle remove-btn"></i>
+                    <img src="${song.cover}" class="cover-art">
+                    <div class="song-info">
+                        <strong>${song.title}</strong> - ${song.artist}
+                    </div>
+                    <i class="fas fa-play-circle control-btn" data-index="${index}"></i>
+                    <i class="fas fa-minus-circle remove-btn" data-index="${index}"></i>
                 `;
-                li.querySelector('.remove-btn').addEventListener('click', () => {
-                    removeFromPlaylist(index);
+        
+                li.querySelector('.control-btn').addEventListener('click', (event) => {
+                    const playIndex = parseInt(event.target.getAttribute('data-index'));
+                    playPlaylistSong(playIndex);
                 });
+        
+                li.querySelector('.remove-btn').addEventListener('click', (event) => {
+                    const removeIndex = parseInt(event.target.getAttribute('data-index'));
+                    removeFromPlaylist(removeIndex);
+                });
+        
                 playlist.appendChild(li);
             });
         }
+        function playPlaylistSong(index) {
+            if (userPlaylist.length > 0 && index >= 0 && index < userPlaylist.length) {
+                audioPlayer.src = userPlaylist[index].src;
+                audioPlayer.play();
+                currentIndex = -1; // 表示從播放清單播放
+            }
+        }
 
         function removeFromPlaylist(index) {
-            userPlaylist.splice(index, 1);
-            renderPlaylist();
+            if (index >= 0 && index < userPlaylist.length) {
+                userPlaylist.splice(index, 1);
+                renderPlaylist();
+            }
         }
 
         prevBtn.addEventListener('click', () => {
