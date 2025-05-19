@@ -1,4 +1,6 @@
 [
-    {"title": "下輩子","artist": "玖壹壹(Nine one one)","album": "x","src": "song/下輩子.mp3","cover": "cover/玖肆伍叁.jpg"},
-    {"title": "心內的話","artist": "玖壹壹(Nine one one)","album": "x","src": "song/心內的話.mp3","cover": "cover/心內的話.jpg"}
+    {"title": "下輩子","artist": "玖壹壹(Nine one one)","album": "玖肆伍叁","src": "song/下輩子.mp3","cover": "cover/玖肆伍叁.jpg"},
+    {"title": "心內的話","artist": "玖壹壹(Nine one one)","album": "x","src": "song/心內的話.mp3","cover": "cover/心內的話.jpg"},
+    {"title": "BRONMAN","artist": "玖壹壹(Nine one one)","album": "BRONMAN","src": "song/BRONMAN.mp3","cover": "cover/BRONMAN (2).jpg"},
+    {"title": "LOCAL","artist": "玖壹壹(Nine one one)","album": "LOCAL","src": "song/LOCAL.mp3","cover": "cover/LOCAL.jpg"},
 ]
