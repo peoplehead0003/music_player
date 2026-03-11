@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>整合式音樂播放器</title>
+    <title>整合式音樂播放器 - Howler.js Edition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
@@ -99,10 +99,11 @@
         }
 
         .progress-bar {
-            background-color: var(--text-main);
+            background-color: var(--spotify-green);
             height: 100%;
             width: 0%;
             border-radius: 3px;
+            transition: width 0.1s linear; /* 讓移動更平滑 */
         }
 
         .time-info {
@@ -248,7 +249,8 @@
 
         let songIndex = 0;
         let songs = [];
-        let currentHowl = null; // 儲存當前的 Howl 實例
+        let currentHowl = null;
+        let animationId = null; // 用於追蹤 requestAnimationFrame
 
         // 讀取音樂資料
         fetch('music_data.json')
@@ -256,7 +258,7 @@
             .then(data => {
                 songs = data;
                 if(songs.length > 0) {
-                    loadSong(songIndex);
+                    loadSong(songIndex, false); // 初始載入不自動播放
                     renderPlaylist();
                 }
             })
@@ -265,14 +267,19 @@
                 console.error(err);
             });
 
-        // 載入歌曲並建立 Howl 實例
-        function loadSong(index) {
+        // 載入歌曲
+        function loadSong(index, shouldPlay = false) {
             const song = songs[index];
             songTitle.textContent = song.title;
             artistName.textContent = song.artist;
             coverArt.src = song.cover;
 
-            // 如果之前有歌在播，先停止並解除安裝
+            // --- 重置進度條 UI ---
+            progressBar.style.width = '0%';
+            currentTimeSpan.textContent = "0:00";
+            durationSpan.textContent = "0:00";
+
+            // 如果之前有歌在播，先停止並卸載舊實例
             if (currentHowl) {
                 currentHowl.stop();
                 currentHowl.unload();
@@ -281,17 +288,30 @@
             // 建立新的 Howl 對象
             currentHowl = new Howl({
                 src: [song.src],
-                html5: true, // 強烈建議：串流大檔案時必須開啟，才不會卡住瀏覽器
+                html5: true, 
                 volume: volumeSlider.value,
                 onload: function() {
                     durationSpan.textContent = formatTime(currentHowl.duration());
                 },
+                onplay: function() {
+                    // 播放開始時，啟動進度更新
+                    playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                    requestAnimationFrame(updateProgress);
+                },
+                onpause: function() {
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                },
                 onend: function() {
-                    nextSong();
+                    nextSong(); // 播放結束自動下一首
                 }
             });
 
             updatePlaylistActiveSong();
+
+            // 如果需要播放（點擊下一首或切換清單時）
+            if (shouldPlay) {
+                currentHowl.play();
+            }
         }
 
         // 播放與暫停切換
@@ -300,24 +320,24 @@
 
             if (currentHowl.playing()) {
                 currentHowl.pause();
-                playBtn.innerHTML = '<i class="fas fa-play"></i>';
             } else {
                 currentHowl.play();
-                playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                requestAnimationFrame(updateProgress); // 開始更新進度條
             }
         }
 
-        // 更新進度條（使用 requestAnimationFrame 達到 60fps 的流暢感）
+        // 更新進度條
         function updateProgress() {
             if (currentHowl && currentHowl.playing()) {
                 const seek = currentHowl.seek() || 0;
                 const duration = currentHowl.duration() || 0;
-                const progressPercent = (seek / duration) * 100;
                 
-                progressBar.style.width = `${progressPercent}%`;
-                currentTimeSpan.textContent = formatTime(seek);
+                if (duration > 0) {
+                    const progressPercent = (seek / duration) * 100;
+                    progressBar.style.width = `${progressPercent}%`;
+                    currentTimeSpan.textContent = formatTime(seek);
+                }
 
+                // 繼續下一幀更新
                 requestAnimationFrame(updateProgress);
             }
         }
@@ -325,14 +345,12 @@
         // 切換歌曲邏輯
         function nextSong() {
             songIndex = (songIndex + 1) % songs.length;
-            loadSong(songIndex);
-            togglePlay(); // 自動播放
+            loadSong(songIndex, true); // 傳入 true 確保切換後播放
         }
 
         function prevSong() {
             songIndex = (songIndex - 1 + songs.length) % songs.length;
-            loadSong(songIndex);
-            togglePlay();
+            loadSong(songIndex, true); // 傳入 true 確保切換後播放
         }
 
         // 事件監聽
@@ -346,12 +364,14 @@
             const width = progressContainer.clientWidth;
             const clickX = e.offsetX;
             const duration = currentHowl.duration();
-            currentHowl.seek((clickX / width) * duration);
             
-            // 如果在暫停時點擊進度條，更新一次時間文字
-            if (!currentHowl.playing()) {
+            if (duration > 0) {
+                const targetTime = (clickX / width) * duration;
+                currentHowl.seek(targetTime);
+                
+                // 立即更新 UI
                 progressBar.style.width = `${(clickX / width) * 100}%`;
-                currentTimeSpan.textContent = formatTime((clickX / width) * duration);
+                currentTimeSpan.textContent = formatTime(targetTime);
             }
         });
 
@@ -359,11 +379,11 @@
         volumeSlider.addEventListener('input', (e) => {
             const vol = e.target.value;
             if (currentHowl) currentHowl.volume(vol);
-            // 也可以使用 Howler.volume(vol) 來控制全域音量
         });
 
         // 格式化時間 (00:00)
         function formatTime(secs) {
+            if (isNaN(secs)) return "0:00";
             const minutes = Math.floor(secs / 60) || 0;
             const seconds = Math.floor(secs % 60) || 0;
             return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
@@ -380,8 +400,7 @@
                 `;
                 li.addEventListener('click', () => {
                     songIndex = index;
-                    loadSong(songIndex);
-                    togglePlay();
+                    loadSong(songIndex, true); // 點擊清單項目直接播放
                 });
                 playlistUl.appendChild(li);
             });
