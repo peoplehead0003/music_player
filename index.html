@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>整合式音樂播放器 - Spotify Style</title>
+    <title>整合式音樂播放器</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
     <style>
         :root {
             --spotify-green: #1DB954;
@@ -18,11 +19,7 @@
             --progress-bg: #4d4d4d;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Inter', "PingFang TC", "Helvetica Neue", sans-serif;
@@ -35,7 +32,6 @@
             padding: 20px;
         }
 
-        /* 播放器主容器：使用 Flexbox 實現 RWD */
         .player-container {
             background-color: var(--bg-card);
             border-radius: 12px;
@@ -47,7 +43,6 @@
             gap: 40px;
         }
 
-        /* 左側：播放控制區 */
         .player-section {
             flex: 1;
             display: flex;
@@ -73,10 +68,6 @@
             transition: transform 0.3s ease;
         }
 
-        .cover-art:hover img {
-            transform: scale(1.02);
-        }
-
         #song-title {
             font-size: 1.4em;
             font-weight: 700;
@@ -90,11 +81,9 @@
         #artist-name {
             font-size: 1em;
             color: var(--text-sub);
-            font-weight: 400;
             margin-bottom: 24px;
         }
 
-        /* 進度條與時間 */
         .progress-wrapper {
             width: 100%;
             margin-bottom: 20px;
@@ -107,7 +96,6 @@
             cursor: pointer;
             position: relative;
             margin-bottom: 8px;
-            overflow: hidden;
         }
 
         .progress-bar {
@@ -115,11 +103,6 @@
             height: 100%;
             width: 0%;
             border-radius: 3px;
-            transition: background-color 0.2s;
-        }
-
-        .progress-container:hover .progress-bar {
-            background-color: var(--spotify-green);
         }
 
         .time-info {
@@ -129,7 +112,6 @@
             color: var(--text-sub);
         }
 
-        /* 控制按鈕 */
         .controls {
             display: flex;
             justify-content: center;
@@ -148,12 +130,8 @@
             transition: all 0.2s ease;
         }
 
-        .control-btn:hover {
-            color: var(--text-main);
-            transform: scale(1.1);
-        }
+        .control-btn:hover { color: var(--text-main); transform: scale(1.1); }
 
-        /* 獨立的播放按鈕樣式 (Spotify 經典綠底黑字) */
         #play {
             background-color: var(--text-main);
             color: black;
@@ -163,59 +141,23 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.2em;
         }
 
-        #play:hover {
-            background-color: var(--spotify-green);
-            transform: scale(1.05);
-        }
+        #play:hover { background-color: var(--spotify-green); }
 
-        /* 音量控制 */
         .volume-control {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 12px;
             width: 100%;
             color: var(--text-sub);
         }
 
-        .volume-control i {
-            font-size: 0.9em;
-        }
-
-        /* 自訂 input range 樣式 */
         input[type=range] {
-            -webkit-appearance: none;
-            width: 60%;
-            background: transparent;
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            background: var(--progress-bg);
-            border-radius: 2px;
+            flex-grow: 1;
             cursor: pointer;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            height: 12px;
-            width: 12px;
-            border-radius: 50%;
-            background: var(--text-main);
-            cursor: pointer;
-            -webkit-appearance: none;
-            margin-top: -4px;
-            display: none; /* 預設隱藏，滑鼠移入才顯示 */
-        }
-        input[type=range]:hover::-webkit-slider-thumb {
-            display: block;
-        }
-        input[type=range]:hover::-webkit-slider-runnable-track {
-            background: var(--spotify-green);
         }
 
-        /* 右側：播放列表 */
         .playlist-section {
             flex: 1;
             display: flex;
@@ -224,96 +166,36 @@
             padding-left: 30px;
         }
 
-        .playlist-section h3 {
-            font-size: 1em;
-            color: var(--text-main);
-            margin-bottom: 16px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
         #playlist {
             list-style: none;
             overflow-y: auto;
-            flex-grow: 1;
             max-height: 350px;
-            padding-right: 5px;
-        }
-
-        /* 美化捲軸 */
-        #playlist::-webkit-scrollbar {
-            width: 6px;
-        }
-        #playlist::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #playlist::-webkit-scrollbar-thumb {
-            background: #555;
-            border-radius: 3px;
-        }
-        #playlist::-webkit-scrollbar-thumb:hover {
-            background: #777;
         }
 
         #playlist li {
-            display: flex;
-            flex-direction: column;
-            padding: 10px 12px;
+            padding: 10px;
             border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.2s ease;
             margin-bottom: 4px;
         }
 
-        #playlist li .li-title {
-            font-size: 0.95em;
-            color: var(--text-main);
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        #playlist li:hover { background-color: var(--bg-card-hover); }
 
-        #playlist li .li-artist {
-            font-size: 0.8em;
-            color: var(--text-sub);
-        }
+        #playlist li.active-song { background-color: rgba(29, 185, 84, 0.1); }
 
-        #playlist li:hover {
-            background-color: var(--bg-card-hover);
-        }
+        #playlist li.active-song .li-title { color: var(--spotify-green); font-weight: 600; }
 
-        #playlist li.active-song {
-            background-color: rgba(29, 185, 84, 0.1);
-        }
+        .li-title { display: block; font-size: 0.95em; }
+        .li-artist { font-size: 0.8em; color: var(--text-sub); }
 
-        #playlist li.active-song .li-title {
-            color: var(--spotify-green);
-            font-weight: 600;
-        }
-
-        /* RWD 響應式設計：小於 768px 時改為直向排列 */
         @media (max-width: 768px) {
-            .player-container {
-                flex-direction: column;
-                gap: 20px;
-                padding: 20px;
-            }
-            .playlist-section {
-                border-left: none;
-                padding-left: 0;
-                border-top: 1px solid rgba(255,255,255,0.1);
-                padding-top: 20px;
-            }
-            #playlist {
-                max-height: 250px;
-            }
+            .player-container { flex-direction: column; }
+            .playlist-section { border-left: none; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
         }
     </style>
 </head>
 <body>
     <div class="player-container">
-        
         <div class="player-section">
             <div class="cover-art">
                 <img id="cover" src="images/default_cover.jpg" alt="專輯封面">
@@ -321,10 +203,8 @@
             <h2 id="song-title">等待載入中...</h2>
             <h3 id="artist-name">--</h3>
 
-            <audio id="audio" src=""></audio>
-
             <div class="progress-wrapper">
-                <div class="progress-container">
+                <div class="progress-container" id="progress-container">
                     <div id="progress" class="progress-bar"></div>
                 </div>
                 <div class="time-info">
@@ -341,184 +221,178 @@
 
             <div class="volume-control">
                 <i class="fas fa-volume-down"></i>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8">
                 <i class="fas fa-volume-up"></i>
             </div>
         </div>
 
         <div class="playlist-section">
             <h3>接下來播放</h3>
-            <ul id="playlist">
-                </ul>
+            <ul id="playlist"></ul>
         </div>
-
     </div>
 
     <script>
-        const audio = document.getElementById('audio');
         const playBtn = document.getElementById('play');
         const prevBtn = document.getElementById('prev');
         const nextBtn = document.getElementById('next');
         const songTitle = document.getElementById('song-title');
         const artistName = document.getElementById('artist-name');
         const coverArt = document.getElementById('cover');
-        const progressContainer = document.querySelector('.progress-container');
+        const progressContainer = document.getElementById('progress-container');
         const progressBar = document.getElementById('progress');
         const currentTimeSpan = document.getElementById('current-time');
         const durationSpan = document.getElementById('duration');
         const volumeSlider = document.getElementById('volume-slider');
         const playlistUl = document.getElementById('playlist');
 
-        let isPlaying = false;
         let songIndex = 0;
         let songs = [];
+        let currentHowl = null; // 儲存當前的 Howl 實例
 
         // 讀取音樂資料
         fetch('music_data.json')
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 songs = data;
                 if(songs.length > 0) {
-                    loadSong(songs[songIndex]);
-                    loadPlaylist();
+                    loadSong(songIndex);
+                    renderPlaylist();
                 }
             })
-            .catch(error => {
-                console.error('Error loading songs:', error);
-                songTitle.textContent = "無法載入音樂資料";
+            .catch(err => {
+                songTitle.textContent = "無法載入清單";
+                console.error(err);
             });
 
-        // 載入歌曲資訊
-        function loadSong(song) {
-            if(!song) return;
+        // 載入歌曲並建立 Howl 實例
+        function loadSong(index) {
+            const song = songs[index];
             songTitle.textContent = song.title;
             artistName.textContent = song.artist;
-            audio.src = song.src;
             coverArt.src = song.cover;
+
+            // 如果之前有歌在播，先停止並解除安裝
+            if (currentHowl) {
+                currentHowl.stop();
+                currentHowl.unload();
+            }
+
+            // 建立新的 Howl 對象
+            currentHowl = new Howl({
+                src: [song.src],
+                html5: true, // 強烈建議：串流大檔案時必須開啟，才不會卡住瀏覽器
+                volume: volumeSlider.value,
+                onload: function() {
+                    durationSpan.textContent = formatTime(currentHowl.duration());
+                },
+                onend: function() {
+                    nextSong();
+                }
+            });
+
             updatePlaylistActiveSong();
         }
 
-        // 播放/暫停
-        function playSong() {
-            isPlaying = true;
-            audio.play();
-            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-        }
+        // 播放與暫停切換
+        function togglePlay() {
+            if (!currentHowl) return;
 
-        function pauseSong() {
-            isPlaying = false;
-            audio.pause();
-            playBtn.innerHTML = '<i class="fas fa-play"></i>';
-        }
-
-        // 切換播放/暫停
-        playBtn.addEventListener('click', () => {
-            if (isPlaying) {
-                pauseSong();
+            if (currentHowl.playing()) {
+                currentHowl.pause();
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
             } else {
-                playSong();
+                currentHowl.play();
+                playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                requestAnimationFrame(updateProgress); // 開始更新進度條
             }
-        });
+        }
 
-        // 上一首
-        prevBtn.addEventListener('click', () => {
-            if(songs.length === 0) return;
-            songIndex--;
-            if (songIndex < 0) {
-                songIndex = songs.length - 1;
+        // 更新進度條（使用 requestAnimationFrame 達到 60fps 的流暢感）
+        function updateProgress() {
+            if (currentHowl && currentHowl.playing()) {
+                const seek = currentHowl.seek() || 0;
+                const duration = currentHowl.duration() || 0;
+                const progressPercent = (seek / duration) * 100;
+                
+                progressBar.style.width = `${progressPercent}%`;
+                currentTimeSpan.textContent = formatTime(seek);
+
+                requestAnimationFrame(updateProgress);
             }
-            loadSong(songs[songIndex]);
-            playSong();
-        });
+        }
 
-        // 下一首
-        nextBtn.addEventListener('click', () => {
-            if(songs.length === 0) return;
-            songIndex++;
-            if (songIndex > songs.length - 1) {
-                songIndex = 0;
-            }
-            loadSong(songs[songIndex]);
-            playSong();
-        });
+        // 切換歌曲邏輯
+        function nextSong() {
+            songIndex = (songIndex + 1) % songs.length;
+            loadSong(songIndex);
+            togglePlay(); // 自動播放
+        }
 
-        // 更新進度條
-        audio.addEventListener('timeupdate', (e) => {
-            const { duration, currentTime } = e.target;
-            if (isNaN(duration)) return; // 避免初始載入時出現 NaN
+        function prevSong() {
+            songIndex = (songIndex - 1 + songs.length) % songs.length;
+            loadSong(songIndex);
+            togglePlay();
+        }
 
-            const progressPercent = (currentTime / duration) * 100;
-            progressBar.style.width = `${progressPercent}%`;
-
-            // 更新時間顯示
-            const formatTime = (time) => {
-                const minutes = Math.floor(time / 60);
-                const seconds = Math.floor(time % 60);
-                return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-            };
-
-            currentTimeSpan.textContent = formatTime(currentTime);
-            durationSpan.textContent = formatTime(duration);
-        });
+        // 事件監聽
+        playBtn.addEventListener('click', togglePlay);
+        nextBtn.addEventListener('click', nextSong);
+        prevBtn.addEventListener('click', prevSong);
 
         // 點擊進度條跳轉
         progressContainer.addEventListener('click', (e) => {
+            if (!currentHowl) return;
             const width = progressContainer.clientWidth;
             const clickX = e.offsetX;
-            const duration = audio.duration;
-            if(!isNaN(duration)) {
-                audio.currentTime = (clickX / width) * duration;
+            const duration = currentHowl.duration();
+            currentHowl.seek((clickX / width) * duration);
+            
+            // 如果在暫停時點擊進度條，更新一次時間文字
+            if (!currentHowl.playing()) {
+                progressBar.style.width = `${(clickX / width) * 100}%`;
+                currentTimeSpan.textContent = formatTime((clickX / width) * duration);
             }
-        });
-
-        // 歌曲結束自動播放下一首
-        audio.addEventListener('ended', () => {
-            nextBtn.click();
         });
 
         // 音量控制
         volumeSlider.addEventListener('input', (e) => {
-            audio.volume = e.target.value;
+            const vol = e.target.value;
+            if (currentHowl) currentHowl.volume(vol);
+            // 也可以使用 Howler.volume(vol) 來控制全域音量
         });
 
-        // 載入播放列表
-        function loadPlaylist() {
-            playlistUl.innerHTML = ''; // 清空現有清單
+        // 格式化時間 (00:00)
+        function formatTime(secs) {
+            const minutes = Math.floor(secs / 60) || 0;
+            const seconds = Math.floor(secs % 60) || 0;
+            return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        // 播放列表渲染
+        function renderPlaylist() {
+            playlistUl.innerHTML = '';
             songs.forEach((song, index) => {
                 const li = document.createElement('li');
-                
-                // 為了排版更好看，將標題和歌手分開
-                const titleSpan = document.createElement('span');
-                titleSpan.className = 'li-title';
-                titleSpan.textContent = song.title;
-
-                const artistSpan = document.createElement('span');
-                artistSpan.className = 'li-artist';
-                artistSpan.textContent = song.artist;
-
-                li.appendChild(titleSpan);
-                li.appendChild(artistSpan);
-
-                li.setAttribute('data-index', index);
+                li.innerHTML = `
+                    <span class="li-title">${song.title}</span>
+                    <span class="li-artist">${song.artist}</span>
+                `;
                 li.addEventListener('click', () => {
                     songIndex = index;
-                    loadSong(songs[songIndex]);
-                    playSong();
+                    loadSong(songIndex);
+                    togglePlay();
                 });
                 playlistUl.appendChild(li);
             });
             updatePlaylistActiveSong();
         }
 
-        // 更新播放列表中當前歌曲的樣式
         function updatePlaylistActiveSong() {
-            const playlistItems = document.querySelectorAll('#playlist li');
-            playlistItems.forEach((item, index) => {
-                if (index === songIndex) {
-                    item.classList.add('active-song');
-                } else {
-                    item.classList.remove('active-song');
-                }
+            const items = playlistUl.querySelectorAll('li');
+            items.forEach((item, index) => {
+                if (index === songIndex) item.classList.add('active-song');
+                else item.classList.remove('active-song');
             });
         }
     </script>
